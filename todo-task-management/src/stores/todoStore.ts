@@ -1,34 +1,39 @@
 import { defineStore } from "pinia";
-import todoApi from "../api/todoApi";
+import { ref } from "vue";
+import * as todoApi from "@/api/todoApi";
 import type { ITodoTask } from "@/types/ITodoTask";
 
-export const useTodoStore = defineStore("todoStore", {
-  state: () => ({
-    tasks: [] as ITodoTask[],
-    loading: false as boolean,
-  }),
+export const useTodoStore = defineStore("todo", () => {
+  const tasks = ref<ITodoTask[]>([]);
+  const loading = ref(false);
 
-  actions: {
-    async loadTasks(): Promise<void> {
-      this.loading = true;
-      const { data } = await todoApi.getTasks();
-      this.tasks = data;
-      this.loading = false;
-    },
+  async function load() {
+    loading.value = true;
+    try {
+      const res = await todoApi.getTasks();
+      tasks.value = res.data;
+    } finally { loading.value = false; }
+  }
 
-    async addTask(task: ITodoTask): Promise<void> {
-      await todoApi.addTask(task);
-      await this.loadTasks();
-    },
+  async function add(task: Partial<ITodoTask>) {
+    await todoApi.addTask(task);
+    await load();
+  }
 
-    async updateTask(id: number, task: ITodoTask): Promise<void> {
-      await todoApi.updateTask(id, task);
-      await this.loadTasks();
-    },
+  async function update(id: number, payload: Partial<ITodoTask>) {
+    await todoApi.updateTask(id, payload);
+    await load();
+  }
 
-    async deleteTask(id: number): Promise<void> {
-      await todoApi.deleteTask(id);
-      await this.loadTasks();
-    }
-  },
+  async function toggle(id: number) {
+    await todoApi.toggleTask(id);
+    await load();
+  }
+
+  async function remove(id: number) {
+    await todoApi.deleteTask(id);
+    await load();
+  }
+
+  return { tasks, loading, load, add, update, toggle, remove };
 });
