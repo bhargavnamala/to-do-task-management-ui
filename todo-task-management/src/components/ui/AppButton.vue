@@ -1,5 +1,6 @@
 <template>
   <v-btn
+   type="button"
     :color="color"
     :disabled="disabled"
     @click="handleClick"
@@ -36,7 +37,8 @@ const color = computed(() => {
 });
 
 function handleClick(e: Event) {
-  e.stopPropagation(); // prevent bubbling if needed
+  e.preventDefault();  // prevents submit
+  e.stopPropagation();
   // emit click to parent
   // @ts-ignore
   emit('click');
